@@ -30,7 +30,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2 text-white font-bold text-xl">
               <Fish className="h-8 w-8" />
-              <span>AquaScan Betta</span>
+              <span>AquaScan Cupang</span>
             </Link>
             
             <div className="hidden md:flex space-x-1">
