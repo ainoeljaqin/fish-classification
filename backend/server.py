@@ -77,49 +77,71 @@ class SpeciesCreate(BaseModel):
     ukuran_avg: str
     gambar_contoh: str
 
-# Mock CNN Model Class
-class MockFreshwaterCNN:
-    def __init__(self):
-        self.fish_types = [
-            "Nila", "Mas", "Lele", "Mujair", "Gurame", "Patin",
-            "Bawal Air Tawar", "Toman", "Gabus", "Jelawat",
-            "Nila Merah", "Tawes", "Sepat Siam", "Tambakan"
-        ]
+# CNN Model Class
+class FreshwaterCNN:
+    def __init__(self, model_path=None):
+        self.fish_types = ["Lele", "Patin", "Nila", "Gurame"]
+        self.model = None
+        self.img_size = (224, 224)
+
+        # Try to load trained model if exists
+        if model_path and os.path.exists(model_path):
+            self.load_model(model_path)
+            logger.info(f"Model loaded from {model_path}")
+        else:
+            logger.warning("No trained model found. Using mock predictions.")
+
+    def load_model(self, model_path):
+        """Load trained Keras model"""
+        try:
+            from tensorflow import keras
+            self.model = keras.models.load_model(model_path)
+            logger.info("Keras model loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load model: {e}")
+            self.model = None
 
     def preprocess_image(self, image_bytes):
-        """Simulate image preprocessing like a real CNN"""
+        """Preprocess image for CNN input"""
         image = Image.open(io.BytesIO(image_bytes))
         if image.mode != 'RGB':
             image = image.convert('RGB')
 
         # Resize to standard CNN input size
-        image = image.resize((224, 224))
+        image = image.resize(self.img_size)
 
         # Convert to numpy array and normalize
         img_array = np.array(image) / 255.0
+
+        # Add batch dimension for model input
+        img_array = np.expand_dims(img_array, axis=0)
+
         return img_array
 
     def predict(self, image_array):
-        """Mock prediction with realistic confidence scores"""
-        # Simulate CNN prediction with weighted random selection
-        weights = [0.20, 0.18, 0.15, 0.12, 0.10, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.007, 0.002, 0.001]
-        # Normalize weights to ensure they sum to 1.0
-        weights = np.array(weights)
-        weights = weights / weights.sum()
-        selected_idx = np.random.choice(len(self.fish_types), p=weights)
+        """Predict fish type using trained model or mock"""
+        if self.model is not None:
+            # Real prediction using trained model
+            predictions = self.model.predict(image_array, verbose=0)
+            predicted_idx = np.argmax(predictions[0])
+            confidence = float(predictions[0][predicted_idx])
 
-        # Generate realistic confidence score (higher for common types)
-        if selected_idx < 3:  # Nila, Mas, Lele - most common
-            confidence = random.uniform(0.75, 0.95)
-        elif selected_idx < 8:  # Common freshwater fish
-            confidence = random.uniform(0.60, 0.85)
-        else:  # Less common varieties
-            confidence = random.uniform(0.45, 0.75)
+            return self.fish_types[predicted_idx], confidence
+        else:
+            # Mock prediction for testing without trained model
+            # Equal weights for all 4 fish types
+            weights = [0.25, 0.25, 0.25, 0.25]
+            selected_idx = np.random.choice(len(self.fish_types), p=weights)
 
-        return self.fish_types[selected_idx], confidence
+            # Generate realistic confidence score
+            confidence = random.uniform(0.65, 0.92)
 
-# Initialize mock model
-mock_cnn = MockFreshwaterCNN()
+            return self.fish_types[selected_idx], confidence
+
+# Initialize CNN model
+# Look for trained model in models directory
+MODEL_PATH = ROOT_DIR / 'models' / 'fish_classifier.h5'
+cnn_model = FreshwaterCNN(model_path=str(MODEL_PATH) if MODEL_PATH.exists() else None)
 
 # Helper Functions
 def create_thumbnail(image_path: Path, size=(150, 150)):
@@ -133,7 +155,7 @@ def create_thumbnail(image_path: Path, size=(150, 150)):
     return thumb_path
 
 def init_sample_data(db: Session):
-    """Initialize sample freshwater fishing fish data"""
+    """Initialize sample freshwater fishing fish data (4 species only)"""
     existing = db.query(DBFreshwaterSpecies).count()
     if existing > 0:
         return
@@ -141,83 +163,43 @@ def init_sample_data(db: Session):
     sample_species = [
         {
             "id": str(uuid.uuid4()),
-            "nama_umum": "Nila",
-            "nama_ilmiah": "Oreochromis niloticus",
-            "deskripsi": "Ikan air tawar yang populer untuk dipancing dan dibudidayakan, memiliki daging yang enak dan mudah ditangkap",
-            "karakteristik": ["Tubuh pipih dan tinggi", "Warna abu-abu keperakan", "Mudah beradaptasi", "Omnivora"],
-            "habitat": "Sungai, waduk, danau air tawar",
-            "ukuran_avg": "20-30 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "nama_umum": "Mas",
-            "nama_ilmiah": "Cyprinus carpio",
-            "deskripsi": "Ikan mas adalah target favorit pemancing, dikenal dengan tarikannya yang kuat dan ukurannya yang besar",
-            "karakteristik": ["Tubuh memanjang dengan sisik besar", "Warna keemasan atau keperakan", "Memiliki sungut", "Herbivora"],
-            "habitat": "Danau, waduk, sungai tenang",
-            "ukuran_avg": "30-50 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
             "nama_umum": "Lele",
             "nama_ilmiah": "Clarias batrachus",
-            "deskripsi": "Ikan lele sangat populer untuk dipancing di malam hari, memiliki kumis panjang sebagai sensor",
-            "karakteristik": ["Tidak bersisik", "Memiliki kumis panjang", "Aktif malam hari", "Karnivora"],
-            "habitat": "Sungai, rawa, kolam berlumpur",
-            "ukuran_avg": "25-40 cm",
+            "deskripsi": "Ikan lele sangat populer untuk dipancing di malam hari, memiliki kumis panjang sebagai sensor. Ikan ini mudah dibudidayakan dan menjadi favorit pemancing pemula hingga profesional.",
+            "karakteristik": ["Tidak bersisik", "Memiliki kumis panjang (barbel)", "Aktif malam hari", "Tubuh licin", "Karnivora"],
+            "habitat": "Sungai, rawa, kolam berlumpur, sawah",
+            "ukuran_avg": "25-40 cm (budidaya), hingga 50 cm (liar)",
             "gambar_contoh": "https://images.unsplash.com/photo-1567603518563-7e4f63a4a145?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "nama_umum": "Mujair",
-            "nama_ilmiah": "Oreochromis mossambicus",
-            "deskripsi": "Ikan yang mudah ditangkap, cocok untuk pemancing pemula dan sering ditemukan di perairan umum",
-            "karakteristik": ["Mirip nila tapi lebih kecil", "Warna hitam keabuan", "Parental care tinggi", "Omnivora"],
-            "habitat": "Sungai, danau, waduk",
-            "ukuran_avg": "15-25 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "nama_umum": "Gurame",
-            "nama_ilmiah": "Osphronemus goramy",
-            "deskripsi": "Ikan besar yang menjadi trophy fish, memiliki tarikan kuat dan daging yang lezat",
-            "karakteristik": ["Tubuh besar dan pipih", "Sirip panjang", "Pertumbuhan lambat", "Herbivora"],
-            "habitat": "Danau, waduk, rawa",
-            "ukuran_avg": "40-60 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=300&h=200&fit=crop"
         },
         {
             "id": str(uuid.uuid4()),
             "nama_umum": "Patin",
             "nama_ilmiah": "Pangasius hypophthalmus",
-            "deskripsi": "Ikan catfish besar yang memberikan perlawanan hebat saat dipancing",
-            "karakteristik": ["Tubuh besar tidak bersisik", "Memiliki sungut", "Perenang cepat", "Omnivora"],
-            "habitat": "Sungai besar, waduk",
+            "deskripsi": "Ikan catfish besar yang memberikan perlawanan hebat saat dipancing. Patin adalah ikan ekonomis tinggi dengan daging yang lezat dan pertumbuhan yang cepat.",
+            "karakteristik": ["Tubuh besar tidak bersisik", "Memiliki sungut pendek", "Perenang cepat", "Warna abu-abu keperakan", "Omnivora"],
+            "habitat": "Sungai besar, waduk, kolam budidaya",
             "ukuran_avg": "50-100 cm",
             "gambar_contoh": "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=300&h=200&fit=crop"
         },
         {
             "id": str(uuid.uuid4()),
-            "nama_umum": "Bawal Air Tawar",
-            "nama_ilmiah": "Colossoma macropomum",
-            "deskripsi": "Ikan kuat dengan tarikan yang powerful, populer di kolam pemancingan",
-            "karakteristik": ["Tubuh bulat pipih", "Warna hitam keperakan", "Gigi kuat", "Omnivora"],
-            "habitat": "Danau, waduk, kolam pemancingan",
-            "ukuran_avg": "30-50 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=300&h=200&fit=crop"
+            "nama_umum": "Nila",
+            "nama_ilmiah": "Oreochromis niloticus",
+            "deskripsi": "Ikan air tawar yang paling populer untuk dipancing dan dibudidayakan. Nila memiliki daging yang enak, mudah ditangkap, dan sangat adaptif terhadap berbagai kondisi perairan.",
+            "karakteristik": ["Tubuh pipih dan tinggi", "Warna abu-abu keperakan", "Mudah beradaptasi", "Sisik besar", "Omnivora"],
+            "habitat": "Sungai, waduk, danau air tawar, kolam",
+            "ukuran_avg": "20-30 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=300&h=200&fit=crop"
         },
         {
             "id": str(uuid.uuid4()),
-            "nama_umum": "Gabus",
-            "nama_ilmiah": "Channa striata",
-            "deskripsi": "Predator ganas yang menjadi target sport fishing, dikenal dengan serangannya yang agresif",
-            "karakteristik": ["Kepala besar seperti ular", "Predator ganas", "Nafas dengan udara", "Karnivora"],
-            "habitat": "Rawa, sungai, danau",
-            "ukuran_avg": "30-60 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1520637836862-4d197d17c17a?w=300&h=200&fit=crop"
+            "nama_umum": "Gurame",
+            "nama_ilmiah": "Osphronemus goramy",
+            "deskripsi": "Ikan besar yang menjadi trophy fish, memiliki tarikan kuat dan daging yang sangat lezat. Gurame adalah ikan prestise dengan harga jual tinggi dan menjadi target favorit pemancing.",
+            "karakteristik": ["Tubuh besar dan pipih", "Sirip panjang", "Pertumbuhan lambat", "Warna kehijauan hingga keabuan", "Herbivora"],
+            "habitat": "Danau, waduk, rawa, kolam",
+            "ukuran_avg": "40-60 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=300&h=200&fit=crop"
         }
     ]
 
@@ -271,8 +253,8 @@ async def classify_fish(file: UploadFile = File(...), db: Session = Depends(get_
 
     # Preprocess and classify
     try:
-        img_array = mock_cnn.preprocess_image(contents)
-        predicted_type, confidence = mock_cnn.predict(img_array)
+        img_array = cnn_model.preprocess_image(contents)
+        predicted_type, confidence = cnn_model.predict(img_array)
 
         # Find matching species in database
         species = db.query(DBFreshwaterSpecies).filter(DBFreshwaterSpecies.nama_umum == predicted_type).first()
@@ -367,7 +349,15 @@ async def startup_event():
     init_db()  # Create tables
     db = next(get_db())
     init_sample_data(db)  # Insert sample data
-    logger.info("Data sampel ikan air tawar berhasil dimuat")
+    logger.info("Data sampel ikan air tawar berhasil dimuat (4 spesies: Lele, Patin, Nila, Gurame)")
+
+    # Check if model is loaded
+    if cnn_model.model is None:
+        logger.warning("⚠️  PERINGATAN: Model belum di-training!")
+        logger.warning("⚠️  Saat ini menggunakan prediksi random (mock mode)")
+        logger.warning("⚠️  Silakan training model dulu dengan menjalankan: python train_model.py")
+    else:
+        logger.info("✓ Model CNN berhasil dimuat dan siap digunakan!")
 
 @app.on_event("shutdown")
 async def shutdown_event():

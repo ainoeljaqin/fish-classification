@@ -1,0 +1,16 @@
+# Requirements untuk Training Model CNN
+# Install dengan: pip install -r requirements-training.txt
+
+# TensorFlow & Keras
+tensorflow==2.15.0
+keras==2.15.0
+
+# Image Processing
+Pillow==11.3.0
+numpy==2.2.6
+
+# Plotting
+matplotlib==3.8.2
+
+# Optional: untuk progress bar yang lebih bagus
+tqdm==4.66.1
