@@ -3,13 +3,13 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: betta_mysql
+    container_name: freshwater_mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: betta_classification
-      MYSQL_USER: bettauser
-      MYSQL_PASSWORD: bettapass123
+      MYSQL_DATABASE: freshwater_fish_classification
+      MYSQL_USER: fishuser
+      MYSQL_PASSWORD: fishpass123
     ports:
       - "3306:3306"
     volumes:

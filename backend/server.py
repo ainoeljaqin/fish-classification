@@ -16,13 +16,13 @@ import numpy as np
 from PIL import Image
 import io
 import random
-from database import get_db, init_db, BettaSpecies as DBBettaSpecies, Classification as DBClassification
+from database import get_db, init_db, FreshwaterSpecies as DBFreshwaterSpecies, Classification as DBClassification
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # Create the main app without a prefix
-app = FastAPI(title="Sistem Klasifikasi Ikan Betta", version="1.0.0")
+app = FastAPI(title="Sistem Klasifikasi Ikan Air Tawar Pemancingan", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -36,7 +36,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # Define Models
-class BettaSpecies(BaseModel):
+class FreshwaterSpecies(BaseModel):
     model_config = ConfigDict(extra="ignore", from_attributes=True)
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -78,12 +78,12 @@ class SpeciesCreate(BaseModel):
     gambar_contoh: str
 
 # Mock CNN Model Class
-class MockBettaCNN:
+class MockFreshwaterCNN:
     def __init__(self):
-        self.betta_types = [
-            "Crown Tail", "Half Moon", "Plakat", "Double Tail",
-            "Veiltail", "Delta Tail", "Spade Tail", "Rose Tail",
-            "Elephant Ear", "Combtail", "Round Tail", "Super Delta"
+        self.fish_types = [
+            "Nila", "Mas", "Lele", "Mujair", "Gurame", "Patin",
+            "Bawal Air Tawar", "Toman", "Gabus", "Jelawat",
+            "Nila Merah", "Tawes", "Sepat Siam", "Tambakan"
         ]
 
     def preprocess_image(self, image_bytes):
@@ -102,24 +102,24 @@ class MockBettaCNN:
     def predict(self, image_array):
         """Mock prediction with realistic confidence scores"""
         # Simulate CNN prediction with weighted random selection
-        weights = [0.25, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.04, 0.03, 0.02, 0.005, 0.005]
+        weights = [0.20, 0.18, 0.15, 0.12, 0.10, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.007, 0.002, 0.001]
         # Normalize weights to ensure they sum to 1.0
         weights = np.array(weights)
         weights = weights / weights.sum()
-        selected_idx = np.random.choice(len(self.betta_types), p=weights)
+        selected_idx = np.random.choice(len(self.fish_types), p=weights)
 
         # Generate realistic confidence score (higher for common types)
-        if selected_idx < 3:  # Crown Tail, Half Moon, Plakat
+        if selected_idx < 3:  # Nila, Mas, Lele - most common
             confidence = random.uniform(0.75, 0.95)
-        elif selected_idx < 6:  # Common varieties
+        elif selected_idx < 8:  # Common freshwater fish
             confidence = random.uniform(0.60, 0.85)
-        else:  # Rare varieties
+        else:  # Less common varieties
             confidence = random.uniform(0.45, 0.75)
 
-        return self.betta_types[selected_idx], confidence
+        return self.fish_types[selected_idx], confidence
 
 # Initialize mock model
-mock_cnn = MockBettaCNN()
+mock_cnn = MockFreshwaterCNN()
 
 # Helper Functions
 def create_thumbnail(image_path: Path, size=(150, 150)):
@@ -133,66 +133,96 @@ def create_thumbnail(image_path: Path, size=(150, 150)):
     return thumb_path
 
 def init_sample_data(db: Session):
-    """Initialize sample Betta fish data"""
-    existing = db.query(DBBettaSpecies).count()
+    """Initialize sample freshwater fishing fish data"""
+    existing = db.query(DBFreshwaterSpecies).count()
     if existing > 0:
         return
 
     sample_species = [
         {
             "id": str(uuid.uuid4()),
-            "nama_umum": "Crown Tail",
-            "nama_ilmiah": "Betta splendens var. crown tail",
-            "deskripsi": "Ikan Betta dengan sirip ekor yang menyerupai mahkota dengan ray yang memanjang",
-            "karakteristik": ["Sirip ekor bercabang", "Ray sirip memanjang", "Bentuk seperti mahkota"],
-            "habitat": "Air tawar tropis",
-            "ukuran_avg": "6-8 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300&h=200&fit=crop"
+            "nama_umum": "Nila",
+            "nama_ilmiah": "Oreochromis niloticus",
+            "deskripsi": "Ikan air tawar yang populer untuk dipancing dan dibudidayakan, memiliki daging yang enak dan mudah ditangkap",
+            "karakteristik": ["Tubuh pipih dan tinggi", "Warna abu-abu keperakan", "Mudah beradaptasi", "Omnivora"],
+            "habitat": "Sungai, waduk, danau air tawar",
+            "ukuran_avg": "20-30 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=300&h=200&fit=crop"
         },
         {
             "id": str(uuid.uuid4()),
-            "nama_umum": "Half Moon",
-            "nama_ilmiah": "Betta splendens var. half moon",
-            "deskripsi": "Ikan Betta dengan sirip ekor membentuk setengah lingkaran sempurna 180 derajat",
-            "karakteristik": ["Sirip ekor membulat", "Bentuk setengah bulan", "Sirip lebar"],
-            "habitat": "Air tawar tropis",
-            "ukuran_avg": "6-7 cm",
+            "nama_umum": "Mas",
+            "nama_ilmiah": "Cyprinus carpio",
+            "deskripsi": "Ikan mas adalah target favorit pemancing, dikenal dengan tarikannya yang kuat dan ukurannya yang besar",
+            "karakteristik": ["Tubuh memanjang dengan sisik besar", "Warna keemasan atau keperakan", "Memiliki sungut", "Herbivora"],
+            "habitat": "Danau, waduk, sungai tenang",
+            "ukuran_avg": "30-50 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=300&h=200&fit=crop"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nama_umum": "Lele",
+            "nama_ilmiah": "Clarias batrachus",
+            "deskripsi": "Ikan lele sangat populer untuk dipancing di malam hari, memiliki kumis panjang sebagai sensor",
+            "karakteristik": ["Tidak bersisik", "Memiliki kumis panjang", "Aktif malam hari", "Karnivora"],
+            "habitat": "Sungai, rawa, kolam berlumpur",
+            "ukuran_avg": "25-40 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1567603518563-7e4f63a4a145?w=300&h=200&fit=crop"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nama_umum": "Mujair",
+            "nama_ilmiah": "Oreochromis mossambicus",
+            "deskripsi": "Ikan yang mudah ditangkap, cocok untuk pemancing pemula dan sering ditemukan di perairan umum",
+            "karakteristik": ["Mirip nila tapi lebih kecil", "Warna hitam keabuan", "Parental care tinggi", "Omnivora"],
+            "habitat": "Sungai, danau, waduk",
+            "ukuran_avg": "15-25 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=300&h=200&fit=crop"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nama_umum": "Gurame",
+            "nama_ilmiah": "Osphronemus goramy",
+            "deskripsi": "Ikan besar yang menjadi trophy fish, memiliki tarikan kuat dan daging yang lezat",
+            "karakteristik": ["Tubuh besar dan pipih", "Sirip panjang", "Pertumbuhan lambat", "Herbivora"],
+            "habitat": "Danau, waduk, rawa",
+            "ukuran_avg": "40-60 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=300&h=200&fit=crop"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nama_umum": "Patin",
+            "nama_ilmiah": "Pangasius hypophthalmus",
+            "deskripsi": "Ikan catfish besar yang memberikan perlawanan hebat saat dipancing",
+            "karakteristik": ["Tubuh besar tidak bersisik", "Memiliki sungut", "Perenang cepat", "Omnivora"],
+            "habitat": "Sungai besar, waduk",
+            "ukuran_avg": "50-100 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=300&h=200&fit=crop"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nama_umum": "Bawal Air Tawar",
+            "nama_ilmiah": "Colossoma macropomum",
+            "deskripsi": "Ikan kuat dengan tarikan yang powerful, populer di kolam pemancingan",
+            "karakteristik": ["Tubuh bulat pipih", "Warna hitam keperakan", "Gigi kuat", "Omnivora"],
+            "habitat": "Danau, waduk, kolam pemancingan",
+            "ukuran_avg": "30-50 cm",
+            "gambar_contoh": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=300&h=200&fit=crop"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nama_umum": "Gabus",
+            "nama_ilmiah": "Channa striata",
+            "deskripsi": "Predator ganas yang menjadi target sport fishing, dikenal dengan serangannya yang agresif",
+            "karakteristik": ["Kepala besar seperti ular", "Predator ganas", "Nafas dengan udara", "Karnivora"],
+            "habitat": "Rawa, sungai, danau",
+            "ukuran_avg": "30-60 cm",
             "gambar_contoh": "https://images.unsplash.com/photo-1520637836862-4d197d17c17a?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "nama_umum": "Plakat",
-            "nama_ilmiah": "Betta splendens var. plakat",
-            "deskripsi": "Ikan Betta dengan sirip pendek, lebih aktif dan agresif, sering digunakan untuk adu",
-            "karakteristik": ["Sirip pendek", "Tubuh kekar", "Sangat aktif"],
-            "habitat": "Air tawar tropis",
-            "ukuran_avg": "5-6 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1501472312651-726ebb35d936?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "nama_umum": "Double Tail",
-            "nama_ilmiah": "Betta splendens var. double tail",
-            "deskripsi": "Ikan Betta dengan sirip ekor yang terbelah menjadi dua bagian",
-            "karakteristik": ["Sirip ekor terbelah", "Sirip dorsal lebar", "Bentuk unik"],
-            "habitat": "Air tawar tropis",
-            "ukuran_avg": "5-7 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1506561829881-82ef6b43b2a4?w=300&h=200&fit=crop"
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "nama_umum": "Veiltail",
-            "nama_ilmiah": "Betta splendens var. veiltail",
-            "deskripsi": "Ikan Betta dengan sirip ekor panjang yang menjuntai seperti kerudung",
-            "karakteristik": ["Sirip ekor sangat panjang", "Menjuntai ke bawah", "Elegan"],
-            "habitat": "Air tawar tropis",
-            "ukuran_avg": "6-8 cm",
-            "gambar_contoh": "https://images.unsplash.com/photo-1491604612772-6853927639ef?w=300&h=200&fit=crop"
         }
     ]
 
     for species_data in sample_species:
-        species = DBBettaSpecies(**species_data)
+        species = DBFreshwaterSpecies(**species_data)
         db.add(species)
 
     db.commit()
@@ -200,25 +230,25 @@ def init_sample_data(db: Session):
 # API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Sistem Klasifikasi Ikan Betta API", "status": "aktif"}
+    return {"message": "Sistem Klasifikasi Ikan Air Tawar Pemancingan API", "status": "aktif"}
 
-@api_router.get("/species", response_model=List[BettaSpecies])
+@api_router.get("/species", response_model=List[FreshwaterSpecies])
 async def get_all_species(db: Session = Depends(get_db)):
-    """Dapatkan semua jenis ikan Betta"""
-    species_list = db.query(DBBettaSpecies).all()
+    """Dapatkan semua jenis ikan air tawar"""
+    species_list = db.query(DBFreshwaterSpecies).all()
     return species_list
 
-@api_router.get("/species/{species_id}", response_model=BettaSpecies)
+@api_router.get("/species/{species_id}", response_model=FreshwaterSpecies)
 async def get_species_detail(species_id: str, db: Session = Depends(get_db)):
     """Dapatkan detail spesies berdasarkan ID"""
-    species = db.query(DBBettaSpecies).filter(DBBettaSpecies.id == species_id).first()
+    species = db.query(DBFreshwaterSpecies).filter(DBFreshwaterSpecies.id == species_id).first()
     if not species:
         raise HTTPException(status_code=404, detail="Spesies tidak ditemukan")
     return species
 
 @api_router.post("/classify", response_model=ClassificationResponse)
 async def classify_fish(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Klasifikasi gambar ikan Betta"""
+    """Klasifikasi gambar ikan air tawar"""
     # Validasi file
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File harus berupa gambar")
@@ -245,7 +275,7 @@ async def classify_fish(file: UploadFile = File(...), db: Session = Depends(get_
         predicted_type, confidence = mock_cnn.predict(img_array)
 
         # Find matching species in database
-        species = db.query(DBBettaSpecies).filter(DBBettaSpecies.nama_umum == predicted_type).first()
+        species = db.query(DBFreshwaterSpecies).filter(DBFreshwaterSpecies.nama_umum == predicted_type).first()
         species_id = species.id if species else None
 
         # Save classification result
@@ -298,11 +328,11 @@ async def delete_classification(classification_id: str, db: Session = Depends(ge
 
     return {"message": "Riwayat berhasil dihapus"}
 
-@api_router.post("/species", response_model=BettaSpecies)
+@api_router.post("/species", response_model=FreshwaterSpecies)
 async def create_species(species_data: SpeciesCreate, db: Session = Depends(get_db)):
     """Tambah spesies baru (admin)"""
     species_id = str(uuid.uuid4())
-    species = DBBettaSpecies(
+    species = DBFreshwaterSpecies(
         id=species_id,
         **species_data.model_dump()
     )
@@ -333,12 +363,12 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Inisialisasi Sistem Klasifikasi Ikan Betta")
+    logger.info("Inisialisasi Sistem Klasifikasi Ikan Air Tawar")
     init_db()  # Create tables
     db = next(get_db())
     init_sample_data(db)  # Insert sample data
-    logger.info("Data sampel Betta berhasil dimuat")
+    logger.info("Data sampel ikan air tawar berhasil dimuat")
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("Shutting down Sistem Klasifikasi Ikan Betta")
+    logger.info("Shutting down Sistem Klasifikasi Ikan Air Tawar")

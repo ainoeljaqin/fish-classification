@@ -8,15 +8,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # MySQL connection
-DATABASE_URL = os.environ.get('DATABASE_URL', 'mysql://root:@localhost/betta_classification')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'mysql://root:@localhost/freshwater_fish_classification')
 
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # Database Models
-class BettaSpecies(Base):
-    __tablename__ = "betta_species"
+class FreshwaterSpecies(Base):
+    __tablename__ = "freshwater_species"
 
     id = Column(String(36), primary_key=True)
     nama_umum = Column(String(100), nullable=False)

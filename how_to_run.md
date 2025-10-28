@@ -34,7 +34,7 @@ npm start
 
 ## Database Schema
 
-### betta_species
+### freshwater_species
 - `id` VARCHAR(36) PRIMARY KEY
 - `nama_umum` VARCHAR(100)
 - `nama_ilmiah` VARCHAR(100)
@@ -58,16 +58,17 @@ npm start
 
 1. **No Watermark**: The application doesn't add watermarks to images. It only creates thumbnails (150x150px).
 
-2. **Data Migration**: Sample data is automatically inserted on first startup (5 Betta species).
+2. **Data Migration**: Sample data is automatically inserted on first startup (8 freshwater fish species).
 
 3. **Connection**: Using TCP connection (`127.0.0.1:3306`) instead of socket to ensure Docker MySQL is accessible.
 
 4. **Credentials**:
-   - MySQL User: `bettauser`
-   - MySQL Password: `bettapass123`
+   - MySQL User: `fishuser`
+   - MySQL Password: `fishpass123`
    - Root Password: `rootpassword`
+   - Database: `freshwater_fish_classification`
    - (Change these for production!)
 
-## Migration Complete ✓
+## Project Info
 
-The application has been successfully migrated from MongoDB to MySQL and is running locally.
+This application classifies freshwater fishing fish using CNN technology. It supports identification of various Indonesian freshwater fish species including Nila, Mas, Lele, Mujair, Gurame, Patin, Bawal, Gabus, and more.

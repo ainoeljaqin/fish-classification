@@ -30,7 +30,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2 text-white font-bold text-xl">
               <Fish className="h-8 w-8" />
-              <span>AquaScan Cupang</span>
+              <span>FishID Pemancingan</span>
             </Link>
             
             <div className="hidden md:flex space-x-1">
@@ -66,11 +66,11 @@ const HomePage = () => {
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Sistem Klasifikasi
-              <span className="block text-emerald-100">Ikan Betta</span>
+              <span className="block text-emerald-100">Ikan Air Tawar Pemancingan</span>
             </h1>
             <p className="text-xl text-emerald-100 mb-8 max-w-3xl mx-auto">
-              Identifikasi jenis ikan Betta Anda dengan teknologi CNN (Convolutional Neural Network).
-              Upload foto ikan Betta dan dapatkan hasil klasifikasi yang akurat dalam hitungan detik.
+              Identifikasi jenis ikan air tawar dengan teknologi CNN (Convolutional Neural Network).
+              Upload foto ikan hasil pancingan Anda dan dapatkan hasil klasifikasi yang akurat dalam hitungan detik.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/classify">
@@ -101,7 +101,7 @@ const HomePage = () => {
       <div className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">Fitur Unggulan</h2>
-          <p className="text-xl text-gray-600">Teknologi terdepan untuk klasifikasi ikan Betta</p>
+          <p className="text-xl text-gray-600">Teknologi terdepan untuk klasifikasi ikan air tawar</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -112,7 +112,7 @@ const HomePage = () => {
               </div>
               <CardTitle>Klasifikasi Akurat</CardTitle>
               <CardDescription>
-                Menggunakan model CNN yang telah dilatih untuk mengenali berbagai jenis ikan Betta dengan tingkat akurasi tinggi
+                Menggunakan model CNN yang telah dilatih untuk mengenali berbagai jenis ikan air tawar pemancingan dengan tingkat akurasi tinggi
               </CardDescription>
             </CardHeader>
           </Card>
@@ -124,7 +124,7 @@ const HomePage = () => {
               </div>
               <CardTitle>Database Lengkap</CardTitle>
               <CardDescription>
-                Koleksi informasi lengkap tentang berbagai jenis ikan Betta termasuk karakteristik dan habitat
+                Koleksi informasi lengkap tentang berbagai jenis ikan air tawar termasuk karakteristik dan habitat
               </CardDescription>
             </CardHeader>
           </Card>
@@ -204,15 +204,15 @@ const ClassificationPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Klasifikasi Ikan Betta</h1>
-          <p className="text-xl text-gray-600">Upload foto ikan Betta untuk mendapatkan hasil klasifikasi</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Klasifikasi Ikan Air Tawar</h1>
+          <p className="text-xl text-gray-600">Upload foto ikan air tawar untuk mendapatkan hasil klasifikasi</p>
         </div>
 
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Upload Gambar</CardTitle>
             <CardDescription>
-              Pilih gambar ikan Betta (maksimal 5MB). Format yang didukung: JPG, PNG, WebP
+              Pilih gambar ikan air tawar (maksimal 5MB). Format yang didukung: JPG, PNG, WebP
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -351,8 +351,8 @@ const DatabasePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Database Ikan Betta</h1>
-          <p className="text-xl text-gray-600">Koleksi lengkap jenis-jenis ikan Betta</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Database Ikan Air Tawar</h1>
+          <p className="text-xl text-gray-600">Koleksi lengkap jenis-jenis ikan air tawar pemancingan</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
