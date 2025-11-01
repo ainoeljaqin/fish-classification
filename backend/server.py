@@ -20,6 +20,7 @@ from database import get_db, init_db, FreshwaterSpecies as DBFreshwaterSpecies, 
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+logger = logging.getLogger(__name__)
 
 # Create the main app without a prefix
 app = FastAPI(title="Sistem Klasifikasi Ikan Air Tawar Pemancingan", version="1.0.0")
